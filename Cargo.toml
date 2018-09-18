@@ -1,7 +1,7 @@
 [package]
 name = "paho_mqtt_c-sys"
 version = "0.1.0"
-authors = ["Simone Mosciatti <mweb.sim@gmail.com>"]
+authors = ["Simone Mosciatti <simone@mweb.biz>"]
 
 build = "build.rs"
 
