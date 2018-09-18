@@ -1,5 +1,5 @@
 extern crate bindgen;
-extern crate cc;
+extern crate cmake;
 
 use bindgen::callbacks::{MacroParsingBehavior, ParseCallbacks};
 use std::collections::HashSet;
@@ -39,47 +39,24 @@ fn main() {
     // the compile step.
     println!("cargo:rerun-if-changed=paho.mqtt.c/");
 
-    // paho suggest to simply use `make` in the correct folder, this is what we are doing very in a
-    // very simple and easy way. We log any error that may happen.
-    // Another option is to use CMake, to generate the Makefile and then, use Make
-    let compile_result = Command::new("make").current_dir("paho.mqtt.c").output();
-
-    // The compilation didn't work out, maybe "make" is missing in the system?
-    // We simply print the error returned by command.
-    if compile_result.is_err() {
-        println!("Error in using `make` to compile `paho.mqtt.c`");
-        println!("{}", compile_result.unwrap_err());
-
-        std::process::exit(101);
-    }
-
-    // We know that compile_result is an `Ok`, we simply unwrap.
-    let compile_result = compile_result.unwrap();
-
-    // the compilation may fail, if it fail we simply print both STDERR and STDOUT
-    if !compile_result.status.success() {
-        println!("Error during the compilation");
-        println!(
-            "STDERR: {}",
-            String::from_utf8_lossy(&compile_result.stderr)
-        );
-        println!(
-            "STDOUT: {}",
-            String::from_utf8_lossy(&compile_result.stdout)
-        );
-
-        std::process::exit(102);
-    }
-
-    // the compilation was successful, we can move on
+    // We use cmake that allow to create the static builds along with ssl
+    let build_dst = cmake::Config::new("paho.mqtt.c/")
+        .define("PAHO_BUILD_STATIC", "TRUE")
+        .define("PAHO_WITH_SSL", "TRUE")
+        .build();
 
     // We check if the files where really compiled.
-    let output_dir = Path::new("paho.mqtt.c/build/output/");
+    let output_dir = build_dst.clone();
+    let output_dir = Path::new(&output_dir).join("lib");
     let artifacts = vec![
         "libpaho-mqtt3a.so",
         "libpaho-mqtt3as.so",
         "libpaho-mqtt3c.so",
         "libpaho-mqtt3cs.so",
+        "libpaho-mqtt3a-static.a",
+        "libpaho-mqtt3as-static.a",
+        "libpaho-mqtt3c-static.a",
+        "libpaho-mqtt3cs-static.a",
     ];
     for artifact in artifacts {
         let artifact = output_dir.join(Path::new(artifact));
@@ -94,11 +71,11 @@ fn main() {
     }
     // we add the folder where all the libraries are built to the path search
     // we simply canonicalize and unwrap, we are (reasonably) sure that the unwrap will
-    // successed since we have actually build the path, check that exists, and any part of
-    // what we build is a directory we are (reasonably) sure exists.
+    // successed since it is the result of cmake
+    // The `static` part is very important here below.
     println!(
-        "cargo:rustc-link-search={}",
-        output_dir.canonicalize().unwrap().to_string_lossy()
+        "cargo:rustc-link-search=static={}",
+        build_dst.canonicalize().unwrap().to_string_lossy()
     );
 
     let macros = Arc::new(RwLock::new(HashSet::new()));
