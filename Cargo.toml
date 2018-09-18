@@ -1,6 +1,6 @@
 [package]
 name = "paho_mqtt_c-sys"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Simone Mosciatti <simone@mweb.biz>"]
 
 description = "low level sys crate bind to paho.mqtt.c, usefull to create higher level libraries"
