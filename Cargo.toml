@@ -3,6 +3,12 @@ name = "paho_mqtt_c-sys"
 version = "0.1.0"
 authors = ["Simone Mosciatti <simone@mweb.biz>"]
 
+description = "low level sys crate bind to paho.mqtt.c, usefull to create higher level libraries"
+keywords = ["mqtt", "iot"]
+
+license = "MIT"
+repository = "https://github.com/siscia/paho_mqtt_c-sys"
+
 build = "build.rs"
 
 [dependencies]
