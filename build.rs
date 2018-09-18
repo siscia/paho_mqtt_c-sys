@@ -5,7 +5,6 @@ use bindgen::callbacks::{MacroParsingBehavior, ParseCallbacks};
 use std::collections::HashSet;
 use std::env;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::sync::{Arc, RwLock};
 
 // bindgen generate twice the IPPORT_RESERVED const, it is not so clear why.
