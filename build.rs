@@ -39,7 +39,7 @@ fn main() {
     println!("cargo:rerun-if-changed=paho.mqtt.c/");
 
     // We use cmake that allow to create the static builds along with ssl
-    let build_dst = cmake::Config::new("paho.mqtt.c/")
+    let mut build_dst = cmake::Config::new("paho.mqtt.c/")
         .define("PAHO_BUILD_STATIC", "TRUE")
         .define("PAHO_WITH_SSL", "TRUE")
         .build();
@@ -68,15 +68,16 @@ fn main() {
             std::process::exit(103);
         }
     }
-    // we add the folder where all the libraries are built to the path search
-    // we simply canonicalize and unwrap, we are (reasonably) sure that the unwrap will
-    // successed since it is the result of cmake
-    // The `static` part is very important here below.
-    println!(
-        "cargo:rustc-link-search=static={}",
-        build_dst.canonicalize().unwrap().to_string_lossy()
-    );
 
+    // we add the folder where all the libraries are built to the path search
+    build_dst.push("lib");
+    println!("cargo:rustc-link-search=native={}", build_dst.display());
+
+    // here we add the two libraries we just build, do not add the prefix `lib` and the postfix
+    // `.so`
+    // I believe is also possible to add the static ones.
+    println!("cargo:rustc-link-lib=paho-mqtt3cs");
+    println!("cargo:rustc-link-lib=paho-mqtt3as");
     let macros = Arc::new(RwLock::new(HashSet::new()));
 
     // The next step is to generate the bindings using bindgen
